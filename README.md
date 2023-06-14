@@ -41,6 +41,25 @@ mvn spring-boot:run
 ```
 http://localhost:8084
 ```
+## Dockerisé
+
+1. Build image
+
+```bash
+docker image build -t assessment .
+```
+
+2. Run container
+
+```bash
+docker container run --name assessment -p 8084:8084 -d assessment
+```
+
+3. Requêtez à l'application à l'adresse suivante :
+
+```bash
+http://localhost:8084
+```
 
 ## Auteurs
 Aimé Malcorps
