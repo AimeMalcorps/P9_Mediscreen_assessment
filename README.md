@@ -4,6 +4,7 @@
 Ce projet est une application Java Spring Boot développée à l'aide de Maven. Il constutue un des trois micro-services backend composants l'application Mediscreen. Ce service permet de générer les rapports dess patients en fonction de leurs notes (voir [Mediscreen History Notes](https://github.com/AimeMalcorps/P9_Mediscreen_history/tree/DEV)).
 
 ## Configuration requise
+- [Mediscreen History Notes](https://github.com/AimeMalcorps/P9_Mediscreen_history/tree/DEV) Installé
 - [Java 17](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
 - [Maven 4.0.0](https://maven.apache.org/download.cgi)
 
