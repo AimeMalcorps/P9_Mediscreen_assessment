@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import com.mediscreen.assessment.dto.NoteDTO;
 
-@FeignClient(name = "history-notes", url = "localhost:8082")
+@FeignClient(name = "history-notes", url = "host.docker.internal:8082")
 public interface HistoryNotesProxy {
 	
 	@GetMapping(value = "/patHistory/patient/{id}")
