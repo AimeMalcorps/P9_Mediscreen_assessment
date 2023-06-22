@@ -1,0 +1,7 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+assessment,com.mediscreen.assessment.dto,AssessmentDTO,0,17,0,0,0,7,0,5,0,5
+assessment,com.mediscreen.assessment.dto,PatientDTO,0,52,0,0,0,23,0,15,0,15
+assessment,com.mediscreen.assessment.dto,NoteDTO,0,24,0,0,0,11,0,7,0,7
+assessment,com.mediscreen.assessment,AssessmentApplication,5,3,0,0,2,1,1,1,1,1
+assessment,com.mediscreen.assessment.controllers,AssessmentController,0,13,0,0,0,3,0,3,0,3
+assessment,com.mediscreen.assessment.services,AssessmentService,62,251,6,34,15,49,3,25,0,8

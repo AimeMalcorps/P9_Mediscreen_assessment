@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="fr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AssessmentService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">assessment</a> &gt; <a href="index.source.html" class="el_package">com.mediscreen.assessment.services</a> &gt; <span class="el_source">AssessmentService.java</span></div><h1>AssessmentService.java</h1><pre class="source lang-java linenums">package com.mediscreen.assessment.services;
+
+import java.time.LocalDate;
+import java.time.Period;
+import java.util.Arrays;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.mediscreen.assessment.dto.AssessmentDTO;
+import com.mediscreen.assessment.dto.NoteDTO;
+import com.mediscreen.assessment.dto.PatientDTO;
+import com.mediscreen.assessment.proxies.DemographicProxy;
+import com.mediscreen.assessment.proxies.HistoryNotesProxy;
+
+@Service
+<span class="fc" id="L20">public class AssessmentService {</span>
+
+	@Autowired
+	HistoryNotesProxy historyNotesProxy;
+	
+	@Autowired
+	DemographicProxy demogrphicProxy;
+
+<span class="fc" id="L28">	private Logger logger = LoggerFactory.getLogger(AssessmentService.class);</span>
+
+<span class="fc" id="L30">	public static final List&lt;String&gt; keyWords = Arrays.asList(&quot;Hémoglobine A1C&quot;, &quot;Microalbumine&quot;, &quot;Taille&quot;, &quot;Poids&quot;, &quot;Fumeur&quot;,</span>
+<span class="fc" id="L31">			&quot;Anormal&quot;, &quot;Cholestérol&quot;, &quot;Vertige&quot;, &quot;Rechute&quot;, &quot;Réaction&quot;, &quot;Anticorps&quot;);</span>
+
+	
+	public AssessmentDTO getPatientByFamilly(String familly) {
+<span class="fc" id="L35">		PatientDTO patientDTO = new PatientDTO();</span>
+		
+		try {
+<span class="fc" id="L38">			patientDTO = demogrphicProxy.getPatientByName(familly);</span>
+<span class="fc" id="L39">			return generateAssessment(patientDTO);</span>
+<span class="fc" id="L40">		} catch (Exception e) {</span>
+<span class="fc" id="L41">			return null;</span>
+		}
+	}
+
+	public AssessmentDTO generateAssessment(PatientDTO patientDTO) {
+		
+<span class="fc" id="L47">		AssessmentDTO assessmentDTO = new AssessmentDTO();</span>
+		
+<span class="fc" id="L49">		String risque = &quot;None&quot;;</span>
+		
+<span class="fc bfc" id="L51" title="All 2 branches covered.">		if (patientDTO != null) {</span>
+			
+			try { 
+				
+<span class="fc" id="L55">				assessmentDTO.setPatientInfo(generatePatientInfo(patientDTO));</span>
+				
+<span class="nc" id="L57">				List&lt;NoteDTO&gt; patientNotes = historyNotesProxy.getNotesByPatientId(patientDTO.getId());</span>
+				
+<span class="nc bnc" id="L59" title="All 2 branches missed.">				if (patientNotes != null) {</span>
+<span class="nc" id="L60">					int keyWordOccurency = calculateKeyWordPresence(patientNotes);</span>
+<span class="nc" id="L61">					logger.info(&quot;keyWordOccurency = &quot; + keyWordOccurency);</span>
+					// Aucun risque de diabete
+<span class="nc bnc" id="L63" title="All 2 branches missed.">					if (keyWordOccurency == 0) {</span>
+<span class="nc" id="L64">						assessmentDTO.setResult(risque);</span>
+<span class="nc" id="L65">						return assessmentDTO;</span>
+					} else {
+						// si le patient a plus de 30 ans
+<span class="nc bnc" id="L68" title="All 2 branches missed.">						if (Period.between(LocalDate.parse(patientDTO.getDob()), LocalDate.now()).getYears() &gt; 30) {</span>
+<span class="nc" id="L69">							logger.info(&quot;PLUS de 30 ans&quot;);</span>
+<span class="nc" id="L70">							risque = assessmentMoreThan30(keyWordOccurency);</span>
+						// moins de 30 ans
+<span class="nc" id="L72">						} else {</span>
+<span class="nc" id="L73">							logger.info(&quot;MOINS de 30 ans&quot;);</span>
+<span class="nc" id="L74">							risque = assessmentLessThan30(keyWordOccurency, patientDTO.getSex());</span>
+						}
+					}
+				}
+				
+<span class="nc" id="L79">				assessmentDTO.setResult(risque);</span>
+<span class="nc" id="L80">				return assessmentDTO;</span>
+				
+<span class="fc" id="L82">			} catch(Exception e) {</span>
+<span class="fc" id="L83">				return null;</span>
+			}
+		} else {
+<span class="fc" id="L86">			return null;</span>
+		}
+	}
+	
+	// Calcul le risque pour un patient de moins de 30 ans
+	public String assessmentMoreThan30(int keyWordOccurency) {
+		
+<span class="fc" id="L93">		String risque = &quot;None&quot;;</span>
+		
+<span class="fc bfc" id="L95" title="All 4 branches covered.">		if (keyWordOccurency &gt;= 2 &amp;&amp; keyWordOccurency &lt;= 5) {</span>
+<span class="fc" id="L96">			risque = &quot;Borderline&quot;;</span>
+<span class="fc bfc" id="L97" title="All 4 branches covered.">		} else if (keyWordOccurency == 6 || keyWordOccurency == 7) {</span>
+<span class="fc" id="L98">			risque = &quot;In Danger&quot;;</span>
+<span class="fc bfc" id="L99" title="All 2 branches covered.">		} else if (keyWordOccurency &gt;= 8) {</span>
+<span class="fc" id="L100">			risque = &quot;Early onset&quot;;</span>
+		}
+		
+<span class="fc" id="L103">		logger.info(risque + &quot; - Plus de 30 ans&quot;);</span>
+		
+<span class="fc" id="L105">		return risque;</span>
+	}
+	
+	// Calcul le risque pour un patient de moins de 30 ans
+	public String  assessmentLessThan30(int keyWordOccurency, char sex) {
+		
+<span class="fc" id="L111">		String risque = &quot;None&quot;;</span>
+		
+<span class="fc bfc" id="L113" title="All 2 branches covered.">		if (sex == 'M') {</span>
+<span class="fc bfc" id="L114" title="All 4 branches covered.">			if (keyWordOccurency == 3 || keyWordOccurency == 4) {</span>
+<span class="fc" id="L115">				risque = &quot;In Danger&quot;;</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">			} else if (keyWordOccurency &gt;= 5) {</span>
+<span class="fc" id="L117">				risque = &quot;Early onset&quot;;</span>
+			}
+		}
+		
+<span class="fc bfc" id="L121" title="All 2 branches covered.">		if (sex == 'F') {</span>
+<span class="fc bfc" id="L122" title="All 4 branches covered.">			if (keyWordOccurency &gt;= 4 &amp;&amp; keyWordOccurency &lt;= 6) {</span>
+<span class="fc" id="L123">				risque = &quot;In Danger&quot;;</span>
+<span class="fc bfc" id="L124" title="All 2 branches covered.">			} else if (keyWordOccurency &gt;= 7) {</span>
+<span class="fc" id="L125">				risque = &quot;Early onset&quot;;</span>
+			}
+		}
+		
+<span class="fc" id="L129">		logger.info(risque + &quot; - Moins de 30 ans&quot;);</span>
+		
+<span class="fc" id="L131">		return risque;</span>
+	}
+	
+	public int calculateKeyWordPresence(List&lt;NoteDTO&gt; patientNotes) {
+		
+<span class="fc" id="L136">		int keyWordOccurency = 0;</span>
+		
+<span class="fc bfc" id="L138" title="All 2 branches covered.">		for (NoteDTO noteDTO : patientNotes) {</span>
+<span class="fc bfc" id="L139" title="All 2 branches covered.">			for (String word : keyWords) {</span>
+<span class="fc bfc" id="L140" title="All 2 branches covered.">				if (noteDTO.getNote().toUpperCase().contains(word.toUpperCase())) {</span>
+<span class="fc" id="L141">					keyWordOccurency ++;</span>
+				}
+			}
+		}
+<span class="fc" id="L145">		return keyWordOccurency;</span>
+	}
+	
+	public String generatePatientInfo(PatientDTO patientDTO) {
+		
+		try {
+<span class="fc" id="L151">			int age = Period.between(LocalDate.parse(patientDTO.getDob()), LocalDate.now()).getYears();</span>
+<span class="fc" id="L152">			return patientDTO.getFamilly() + &quot; &quot; + patientDTO.getGiven() +</span>
+<span class="fc" id="L153">					&quot; (age &quot; + age + &quot;)&quot;;</span>
+<span class="fc" id="L154">		} catch (Exception e) {</span>
+<span class="fc" id="L155">			return patientDTO.getFamilly() + &quot; &quot; + patientDTO.getGiven();</span>
+		}
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>
